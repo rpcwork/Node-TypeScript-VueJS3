@@ -22,7 +22,6 @@
  *  * https://stackoverflow.com/questions/2298870/get-names-of-all-keys-in-the-collection
  *  * Thanks to https://hevodata.com/blog/mongodb-to-mysql/
  * 
- *  TO DO : use dotenv here so that .env file can be excluded in .gitignore and credts don't go into repo
  * 
  * * * * * * * */
 
@@ -58,14 +57,16 @@ function reconcileColumnsFromDocuments(conn, item, tablename, callback) {
 			// index ind is incrementally assigned here
 			fields.forEach(function(field, ind) {
 				i = ind;
-				// if the type and value of the item key does not match field, push into which array
+				// if the type and value of the current field in iteration does not match the corresponding item key, push into which array
 				if (!(field === item_keys[ind])) {
 					which.push(item_keys[ind]);
+					// **** Number of fields currently in the mysql table equals the number of item keys in this collection item
 					// if our index ind matched the number of keys in the item, all columns have been pushed into the which array
 					// so summon the callback function to create columns and then insert the data
 					if (ind == item_keys.length - 1 && item_keys.length == fields.length - 1) {
 						callback(which);
 					} else if (i == fields.length - 1 && i < item_keys.length - 1) {
+						// **** Number of fields currently in the mysql table is less than the number of item keys in this collection item
 						// otherwise iterate the key in the item, puhs them into the which array
 						// once done, summon the callback function to create columns and then insert the data
 						item_keys.forEach(function(key, index) {
@@ -288,7 +289,6 @@ function populateTablesFromCollections(conn, tablename, collectionname, callback
 /**
  * Program call starts here
  * Define the connection creds for the mongo and mysql database 
- * (TO DO : use dotenv here so that .env file can be excluded in .gitignore and credts don't go into repo)
  * Then, call morphMongoToMysqlSchema and pass entire function as callback argument
  * */
 var json = {
@@ -302,7 +302,19 @@ var json = {
 	"mysqlpass" : process.env.MYSQLPASS
 };
 
-
+/**
+ * Creates the mysql database
+ * Logs into mongo db, lists the collections in the database, pick first item in each collection lists the item and its keys in the collections 
+ * Creates the mysql table for the collection, then calls callback function supplied as argument  
+ * which in turn calls another callback populateTablesFromCollections to add the columns and rows 
+ * from this item into the mysql table we just created 
+ * 
+ * Chain of calls:
+ * 	morphMongoToMysqlSchema 
+ * 		-> populateTablesFromCollections
+ * 			-> reconcileColumnsFromDocuments
+ * 
+ * */
 morphMongoToMysqlSchema(function(query, tables, collectionnames, callback) {
 	var MongoClient = require('mongodb').MongoClient, 
 	format = require('util').format;
@@ -321,8 +333,10 @@ morphMongoToMysqlSchema(function(query, tables, collectionnames, callback) {
 		}
 		
 		query.forEach(function(query1, index) {
-
+			// Mysql table is created here with query1 that is supplied from callback inside function morphMongoToMysqlSchema
 			connlcl.query(query1, function(err, rows, fields) {
+				// For documents/items in collection after the first one, since table already exists, we encounter error and proceed 
+				// to reconiling item keys from mongo item with mysql table columns to see if we need to add more columns before adding data row
 				if (err)
 					throw err;
 					populateTablesFromCollections(connlcl, tables[index], collectionnames[index], function(res) {

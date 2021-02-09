@@ -213,6 +213,7 @@ app.get("/texttoimage", (req, res, next) => {
     }).then( scresult => {
         // preapre response for called 
         var jresponse = [
+            {"result" : "success"},
             {"words": resultstr},
             {"imageurl" : scresult}
         ];

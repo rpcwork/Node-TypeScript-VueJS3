@@ -1,2 +1,2 @@
 # README 
-for each soltuion is in individual folders.
+for each solution is in individual folders.
