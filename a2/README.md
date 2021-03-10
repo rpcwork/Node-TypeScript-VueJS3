@@ -1,5 +1,5 @@
 
-# QUICKSTART HELP
+# AUTOMATED MONGO TO MYSQL SCHEMA CONVERSION
 - Log into the server at : 69.87.218.194 
 - log into mongodb:
 - useful mongo commands in this context: show databases; | use school; | show collections; | db.students.find();
